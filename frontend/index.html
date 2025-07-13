@@ -1,0 +1,833 @@
+<html class="scroll-smooth" data-theme="dark" lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <title>
+    MapInsight - Extract deep insights from Google Maps reviews using AI
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&amp;display=swap" rel="stylesheet" />
+  <link href="https://placehold.co/32x32/png?text=MI" rel="icon" type="image/png" />
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      transition: background-color 0.5s ease;
+    }
+
+    .glow {
+      text-shadow:
+        0 0 5px #34d399,
+        0 0 10px #34d399,
+        0 0 20px #34d399,
+        0 0 40px #34d399;
+    }
+
+    .glow-button {
+      box-shadow:
+        0 0 8px #10b981,
+        0 0 20px #10b981,
+        0 0 30px #10b981;
+    }
+
+    .glass {
+      background: rgba(255 255 255 / 0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255 255 255 / 0.2);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+      border-radius: 1rem;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .glass:hover {
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+    }
+
+    .floating-blob {
+      position: absolute;
+      filter: blur(80px);
+      opacity: 0.3;
+      animation: float 10s ease-in-out infinite;
+      mix-blend-mode: screen;
+      border-radius: 50%;
+      z-index: 0;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0);
+      }
+
+      50% {
+        transform: translateY(-20px) translateX(20px);
+      }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: rgba(16, 185, 129, 0.9);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.7);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 9999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Scrollbar for dark mode */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #203a43;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #34d399;
+      border-radius: 10px;
+    }
+
+    /* Loading animation */
+    .loading-spinner {
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      border-top: 4px solid #34d399;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="relative min-h-screen text-white selection:bg-emerald-400 selection:text-black">
+  <!-- Floating Blobs Background -->
+  <img alt="Large glowing green floating blob shape with soft edges"
+    class="floating-blob top-10 left-10 w-72 h-72 animate-float" height="300" loading="lazy"
+    src="https://storage.googleapis.com/a1aa/image/10ab4b7e-c56d-4599-b555-38d14be1aa15.jpg"
+    style="animation-delay: 0s;" width="300" />
+  <img alt="Medium glowing emerald floating blob shape with soft edges"
+    class="floating-blob bottom-20 right-20 w-48 h-48 animate-float" height="200" loading="lazy"
+    src="https://storage.googleapis.com/a1aa/image/37744474-e9f7-4215-611e-ea49bde7682c.jpg"
+    style="animation-delay: 3s;" width="200" />
+  <img alt="Medium glowing lime green floating blob shape with soft edges"
+    class="floating-blob top-1/2 right-1/3 w-60 h-60 animate-float" height="250" loading="lazy"
+    src="https://storage.googleapis.com/a1aa/image/e93e1364-963b-4e46-70e2-f235755f5e22.jpg"
+    style="animation-delay: 6s;" width="250" />
+  <!-- Hero Section -->
+  <section class="relative flex flex-col justify-center items-center min-h-screen px-6 text-center z-10" id="hero">
+    <h1 class="text-5xl md:text-6xl font-extrabold glow mb-4 select-none">
+      🗺 MapInsight
+    </h1>
+    <p class="text-lg md:text-xl max-w-xl mb-10 opacity-90">
+      Extract deep insights from Google Maps reviews using AI.
+    </p>
+    <button aria-label="Start Scraping - scroll to form"
+      class="bg-emerald-500 glow-button px-8 py-3 rounded-full font-semibold text-lg transition-transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-400"
+      id="startScrapingBtn">
+      Start Scraping
+    </button>
+  </section>
+  <!-- About Section -->
+  <section id="about" class="max-w-6xl mx-auto px-6 py-20 relative z-10">
+    <h2 class="text-4xl md:text-5xl font-extrabold text-center text-white glow mb-12">
+      🔍 About MapInsight
+    </h2>
+
+    <div
+      class="glass bg-white/10 backdrop-blur-md p-10 rounded-xl shadow-2xl text-center max-w-4xl mx-auto space-y-8 border border-white/20">
+      <p class="text-lg md:text-xl text-white/90 leading-relaxed">
+        <strong class="text-emerald-400">MapInsight</strong> is a modern AI-powered tool that transforms Google Maps
+        reviews into actionable business insights. It combines real-time data scraping, intelligent filtering, sentiment
+        analysis, and visual reporting — all in a beautifully designed interface.
+      </p>
+
+      <p class="text-lg md:text-xl text-white/90 leading-relaxed">
+        This project was developed by <span class="text-emerald-300 font-semibold">Saksham Pathak</span>, a Master’s
+        student in Artificial Intelligence and Machine Learning at <span class="text-sky-300 font-semibold">IIIT
+          Lucknow</span>. Saksham is passionate about building powerful GenAI applications and deploying full-stack
+        solutions that solve real-world problems at scale.
+      </p>
+
+      <p class="text-lg md:text-xl text-white/90 leading-relaxed">
+        MapInsight reflects Saksham’s commitment to combining cutting-edge technologies like FastAPI, LangChain,
+        Tailwind CSS, and large language models (LLMs) to create intelligent and practical tools for the future of the
+        web.
+      </p>
+
+      <img src="https://storage.googleapis.com/a1aa/image/cb421f76-8571-4b4c-60f9-b85b6ded9e57.jpg"
+        alt="AI analyzing map data and reviews with charts glowing in emerald"
+        class="mx-auto rounded-xl shadow-lg border border-white/20" width="640" height="360" loading="lazy" />
+
+      <p class="text-sm text-white/70 pt-4">
+        🚀 Developed and maintained by <a href="https://github.com/parthmax2" target="_blank"
+          class="text-emerald-400 hover:underline font-semibold">Saksham Pathak (Parthmax)</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 z-10 relative"
+    id="features">
+    <!-- Feature 1 -->
+    <div aria-label="Feature: Scrape reviews by location, count, date"
+      class="glass p-6 flex flex-col items-center text-center space-y-4 hover:scale-105 transition-transform cursor-default">
+      <img alt="Icon of a glowing map pin with location marker in emerald green" class="w-16 h-16 mb-2" height="64"
+        loading="lazy" src="https://storage.googleapis.com/a1aa/image/6ba6f2ff-f7b9-4aaf-e6c5-9d3f435e8270.jpg"
+        width="64" />
+      <h3 class="text-xl font-semibold">
+        Scrape reviews by location, count, date
+      </h3>
+    </div>
+    <!-- Feature 2 -->
+    <div aria-label="Feature: Download Excel reports instantly"
+      class="glass p-6 flex flex-col items-center text-center space-y-4 hover:scale-105 transition-transform cursor-default">
+      <img alt="Icon of a glowing package box representing instant Excel report downloads in emerald green"
+        class="w-16 h-16 mb-2" height="64" loading="lazy"
+        src="https://storage.googleapis.com/a1aa/image/b598a201-1564-46fe-384a-18561290a883.jpg" width="64" />
+      <h3 class="text-xl font-semibold">
+        Download Excel reports instantly
+      </h3>
+    </div>
+    <!-- Feature 3 -->
+    <div aria-label="Feature: Visualize ratings in real-time charts"
+      class="glass p-6 flex flex-col items-center text-center space-y-4 hover:scale-105 transition-transform cursor-default">
+      <img alt="Icon of a glowing bar chart representing real-time rating visualization in lime green"
+        class="w-16 h-16 mb-2" height="64" loading="lazy"
+        src="https://storage.googleapis.com/a1aa/image/ca297275-50d3-4f75-197e-a3de6550f6ab.jpg" width="64" />
+      <h3 class="text-xl font-semibold">
+        Visualize ratings in real-time charts
+      </h3>
+    </div>
+    <!-- Feature 4 -->
+    <div aria-label="Feature: GenAI-powered sentiment tagging"
+      class="glass p-6 flex flex-col items-center text-center space-y-4 hover:scale-105 transition-transform cursor-default">
+      <img alt="Icon of a glowing AI brain representing GenAI-powered sentiment tagging in emerald green"
+        class="w-16 h-16 mb-2" height="64" loading="lazy"
+        src="https://storage.googleapis.com/a1aa/image/d143036a-1f8d-48e1-2633-82edd241f574.jpg" width="64" />
+      <h3 class="text-xl font-semibold">
+        GenAI-powered sentiment tagging
+      </h3>
+    </div>
+  </section>
+  <!-- Review Scraper Form Section -->
+  <section class="max-w-3xl mx-auto px-6 py-16 z-10 relative" id="scraper">
+    <form aria-label="Google Maps review scraper form" class="glass p-8 space-y-6 shadow-lg" id="scrapeForm"
+      novalidate="">
+      <h2 class="text-3xl font-semibold mb-6 text-center glow">
+        Scrape Google Maps Reviews
+      </h2>
+      <div class="flex flex-col">
+        <label class="mb-2 font-medium" for="url">
+          Google Maps Place URL
+        </label>
+        <input aria-describedby="urlHelp" autocomplete="off"
+          class="bg-transparent border border-white/30 rounded-md px-4 py-3 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+          id="url" name="url" placeholder="https://www.google.com/maps/place/..." required="" type="url" />
+        <small class="text-xs text-white/60 mt-1" id="urlHelp">
+          Enter the full Google Maps place URL
+        </small>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div class="flex flex-col">
+          <label class="mb-2 font-medium" for="num_reviews">
+            Number of Reviews
+          </label>
+          <input autocomplete="off"
+            class="bg-transparent border border-white/30 rounded-md px-4 py-3 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+            id="num_reviews" max="1000" min="1" name="num_reviews" required="" type="number" value="50" />
+        </div>
+        <div class="flex flex-col">
+          <label class="mb-2 font-medium" for="start_date">
+            Start Date
+          </label>
+          <input autocomplete="off"
+            class="bg-transparent border border-white/30 rounded-md px-4 py-3 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+            id="start_date" name="start_date" type="date" />
+        </div>
+        <div class="flex flex-col">
+          <label class="mb-2 font-medium" for="end_date">
+            End Date
+          </label>
+          <input autocomplete="off"
+            class="bg-transparent border border-white/30 rounded-md px-4 py-3 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+            id="end_date" name="end_date" type="date" />
+        </div>
+      </div>
+      <div class="text-center">
+        <button aria-live="polite"
+          class="relative inline-flex items-center justify-center bg-emerald-500 glow-button px-10 py-3 rounded-full font-semibold text-lg transition-transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-400"
+          id="submitBtn" type="submit">
+          <span class="absolute left-4">
+            <i class="fas fa-rocket">
+            </i>
+          </span>
+          Start Scraping
+        </button>
+      </div>
+    </form>
+    <!-- Loading Overlay -->
+    <div aria-busy="true" aria-label="Loading" aria-live="assertive"
+      class="hidden fixed inset-0 bg-white/10 backdrop-blur-md flex justify-center items-center z-50"
+      id="loadingOverlay">
+      <div class="loading-spinner" role="img" aria-label="Loading spinner"></div>
+      <span class="sr-only">
+        Loading...
+      </span>
+    </div>
+  </section>
+  <!-- Results Section -->
+  <section aria-live="polite" class="max-w-7xl mx-auto px-6 py-16 space-y-10 hidden z-10" id="results">
+    <h2 class="text-4xl font-extrabold text-center glow select-text" id="placeName" tabindex="0">
+      Place Name
+    </h2>
+    <div class="flex flex-col md:flex-row md:justify-center md:items-center md:space-x-8 space-y-6 md:space-y-0">
+      <a class="glass inline-flex items-center space-x-3 px-6 py-3 rounded-full font-semibold text-emerald-400 border border-emerald-400 hover:bg-emerald-400 hover:text-black transition"
+        download="" href="#" id="downloadExcel">
+        <i class="fas fa-file-excel text-2xl">
+        </i>
+        <span>
+          Download Excel Report
+        </span>
+      </a>
+      <a class="glass inline-flex items-center space-x-3 px-6 py-3 rounded-full font-semibold text-emerald-400 border border-emerald-400 hover:bg-emerald-400 hover:text-black transition"
+        href="#" id="openMapLink" rel="noopener noreferrer" target="_blank">
+        <i class="fas fa-map-marked-alt text-2xl">
+        </i>
+        <span>
+          Open in Google Maps
+        </span>
+      </a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div class="glass p-6 rounded-lg shadow-lg">
+        <iframe allowfullscreen="" class="w-full h-80 rounded-lg border border-white/20" id="mapFrame" loading="lazy"
+          src="" title="Embedded Google Map">
+        </iframe>
+      </div>
+      <div class="glass p-6 rounded-lg shadow-lg flex flex-col">
+        <canvas aria-label="Ratings distribution chart" id="ratingsChart" role="img">
+        </canvas>
+      </div>
+    </div>
+    <div class="glass p-6 rounded-lg shadow-lg">
+      <h3 class="text-2xl font-semibold mb-4 glow">
+        Sentiment Summary
+      </h3>
+      <div aria-atomic="true" aria-live="polite" class="flex flex-wrap gap-4 text-3xl justify-center"
+        id="sentimentSummary">
+      </div>
+    </div>
+    <div>
+      <h3 class="text-3xl font-semibold mb-6 glow text-center">
+        Top 10 Reviews
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="reviewsContainer">
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQs Section -->
+  <section class="max-w-4xl mx-auto px-6 py-16 space-y-6 z-10" id="faqs">
+    <h2 class="text-4xl font-extrabold text-center glow mb-10">
+      Frequently Asked Questions
+    </h2>
+    <div class="space-y-4">
+      <!-- FAQ 1 -->
+      <details class="glass p-4 rounded-lg border border-white/20 shadow-lg" open="">
+        <summary
+          class="cursor-pointer font-semibold text-lg select-none focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          Is this free?
+        </summary>
+        <p class="mt-2 text-white/90">
+          Yes! MapInsight offers a free tier with limited scraping capabilities. Premium features are coming soon.
+        </p>
+      </details>
+      <!-- FAQ 2 -->
+      <details class="glass p-4 rounded-lg border border-white/20 shadow-lg">
+        <summary
+          class="cursor-pointer font-semibold text-lg select-none focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          Can I scrape any place?
+        </summary>
+        <p class="mt-2 text-white/90">
+          You can scrape most public Google Maps places, but some private or restricted listings may not be accessible.
+        </p>
+      </details>
+      <!-- FAQ 3 -->
+      <details class="glass p-4 rounded-lg border border-white/20 shadow-lg">
+        <summary
+          class="cursor-pointer font-semibold text-lg select-none focus:outline-none focus:ring-2 focus:ring-emerald-400">
+          Is the data up-to-date?
+        </summary>
+        <p class="mt-2 text-white/90">
+          Yes, MapInsight scrapes live data from Google Maps at the time of your request to ensure freshness.
+        </p>
+      </details>
+    </div>
+  </section>
+  <!-- Newsletter / Contact Section -->
+  <section class="max-w-3xl mx-auto px-6 py-16 z-10" id="newsletter">
+    <h2 class="text-4xl font-extrabold text-center glow mb-8">
+      Subscribe to Our Newsletter
+    </h2>
+    <form aria-label="Newsletter subscription form"
+      class="glass p-8 rounded-lg shadow-lg flex flex-col sm:flex-row items-center gap-6" id="newsletterForm"
+      novalidate="">
+      <input aria-describedby="emailHelp" autocomplete="email"
+        class="flex-grow bg-transparent border border-white/30 rounded-md px-4 py-3 placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition"
+        id="emailInput" name="email" placeholder="Enter your email address" required="" type="email" />
+      <button
+        class="bg-emerald-500 glow-button px-8 py-3 rounded-full font-semibold text-lg transition-transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-400"
+        type="submit">
+        Subscribe
+      </button>
+    </form>
+    <p class="mt-2 text-center text-white/70 text-sm" id="emailHelp">
+      We respect your privacy. No spam.
+    </p>
+  </section>
+  <!-- Footer -->
+  <footer
+    class="sticky bottom-0 bg-white/10 backdrop-blur-md border-t border-white/20 py-4 px-6 flex flex-col sm:flex-row justify-between items-center gap-4 z-20">
+    <p class="text-white/80 select-none">
+      © 2025 MapInsight • Built by Parthmax
+    </p>
+    <div class="flex items-center space-x-6">
+      <a aria-label="GitHub" class="text-white/80 hover:text-emerald-400 transition" href="https://github.com/parthmax2"
+        rel="noopener noreferrer" target="_blank">
+        <i class="fab fa-github fa-lg">
+        </i>
+      </a>
+      <a href="https://huggingface.co/parthmax" target="_blank" rel="noopener noreferrer" aria-label="Hugging Face"
+        title="Hugging Face • Parthmax" class="inline-block hover:scale-110 transition-transform duration-300">
+        <img src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="Hugging Face logo" width="28"
+          height="28" loading="lazy" class="w-7 h-7" />
+      </a>
+
+      <a aria-label="LinkedIn" class="text-white/80 hover:text-emerald-400 transition"
+        href="https://linkedin.com/in/sakshampathak" rel="noopener noreferrer" target="_blank">
+        <i class="fab fa-linkedin fa-lg">
+        </i>
+      </a>
+      <button aria-label="Toggle light and dark theme"
+        class="text-white/80 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded"
+        id="themeToggleBtn">
+        <i class="fas fa-moon fa-lg" id="themeIcon">
+        </i>
+      </button>
+    </div>
+  </footer>
+  <div aria-atomic="true" aria-live="assertive" class="toast" id="toast" role="alert">
+  </div>
+  <script>
+    // Theme toggle with localStorage
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const htmlEl = document.documentElement;
+
+    function setTheme(theme) {
+      if (theme === 'light') {
+        htmlEl.classList.remove('dark');
+        htmlEl.setAttribute('data-theme', 'light');
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        htmlEl.classList.add('dark');
+        htmlEl.setAttribute('data-theme', 'dark');
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+      localStorage.setItem('theme', theme);
+    }
+
+    // Initialize theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      setTheme(savedTheme);
+    } else {
+      // Default dark
+      setTheme('dark');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlEl.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        setTheme('light');
+      } else {
+        setTheme('dark');
+      }
+    });
+
+    // Smooth scroll to form on hero button click
+    document.getElementById('startScrapingBtn').addEventListener('click', () => {
+      document.getElementById('scraper').scrollIntoView({ behavior: 'smooth' });
+      document.getElementById('url').focus();
+    });
+
+    // Toast helper
+    const toast = document.getElementById('toast');
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Newsletter form validation and toast
+    const newsletterForm = document.getElementById('newsletterForm');
+    newsletterForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const emailInput = document.getElementById('emailInput');
+      const email = emailInput.value.trim();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showToast('Please enter a valid email address.');
+        emailInput.focus();
+        return;
+      }
+      emailInput.value = '';
+      showToast("You're subscribed!");
+    });
+
+    // Scrape form submission
+    const scrapeForm = document.getElementById('scrapeForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const resultsSection = document.getElementById('results');
+    const placeNameEl = document.getElementById('placeName');
+    const downloadExcelLink = document.getElementById('downloadExcel');
+    const openMapLink = document.getElementById('openMapLink');
+    const mapFrame = document.getElementById('mapFrame');
+    const sentimentSummary = document.getElementById('sentimentSummary');
+    const reviewsContainer = document.getElementById('reviewsContainer');
+    const submitBtn = document.getElementById('submitBtn');
+
+    let ratingsChartInstance = null;
+
+    function createStarRating(rating) {
+      const fullStars = Math.floor(rating);
+      const halfStar = rating - fullStars >= 0.5;
+      const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+      let starsHtml = '';
+      for (let i = 0; i < fullStars; i++) {
+        starsHtml += '<i class="fas fa-star text-amber-400"></i>';
+      }
+      if (halfStar) {
+        starsHtml += '<i class="fas fa-star-half-alt text-amber-400"></i>';
+      }
+      for (let i = 0; i < emptyStars; i++) {
+        starsHtml += '<i class="far fa-star text-amber-400"></i>';
+      }
+      return starsHtml;
+    }
+
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.innerHTML = '<i class="fas fa-check text-emerald-400"></i>';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="far fa-clipboard"></i>';
+        }, 2000);
+      });
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function renderSentimentSummary(sentiments) {
+      // sentiments: { positive: n, neutral: n, negative: n }
+      sentimentSummary.innerHTML = '';
+      const sentimentMap = [
+        { emoji: '😊', label: 'Positive', count: sentiments.positive || 0, color: 'text-emerald-400' },
+        { emoji: '😐', label: 'Neutral', count: sentiments.neutral || 0, color: 'text-yellow-400' },
+        { emoji: '😞', label: 'Negative', count: sentiments.negative || 0, color: 'text-red-500' },
+      ];
+      sentimentMap.forEach(({ emoji, label, count, color }) => {
+        const badge = document.createElement('div');
+        badge.className = `glass px-4 py-2 rounded-full font-semibold flex items-center space-x-2 cursor-default select-none ${color}`;
+        badge.setAttribute('aria-label', `${label} reviews count: ${count}`);
+        badge.innerHTML = `<span class="text-3xl">${emoji}</span><span>${count}</span>`;
+        sentimentSummary.appendChild(badge);
+      });
+    }
+
+    function renderReviews(reviews) {
+      reviewsContainer.innerHTML = '';
+      reviews.slice(0, 10).forEach((review, idx) => {
+        const card = document.createElement('article');
+        card.className = 'glass p-6 rounded-lg shadow-lg flex flex-col justify-between';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Review by ${review.username} with rating ${review.rating.toFixed(1)} stars on ${formatDate(review.absolute_date)}`);
+
+        const header = document.createElement('div');
+        header.className = 'flex justify-between items-center mb-3';
+        const userName = document.createElement('h4');
+        userName.className = 'font-semibold text-lg text-emerald-400';
+        userName.textContent = review.username;
+        const rating = document.createElement('div');
+        rating.className = 'flex space-x-1 text-amber-400';
+        rating.innerHTML = createStarRating(review.rating);
+        header.appendChild(userName);
+        header.appendChild(rating);
+
+        const dateEl = document.createElement('time');
+        dateEl.className = 'text-sm text-white/70 mb-3';
+        dateEl.dateTime = review.absolute_date;
+        dateEl.textContent = formatDate(review.absolute_date);
+
+        const reviewText = document.createElement('p');
+        reviewText.className = 'text-white/90 mb-4 whitespace-pre-wrap';
+        reviewText.textContent = review.review;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'self-end text-white/80 hover:text-emerald-400 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded';
+        copyBtn.setAttribute('aria-label', `Copy review by ${review.username} to clipboard`);
+        copyBtn.innerHTML = '<i class="far fa-clipboard"></i>';
+        copyBtn.addEventListener('click', () => copyToClipboard(review.review, copyBtn));
+
+        card.appendChild(header);
+        card.appendChild(dateEl);
+        card.appendChild(reviewText);
+        card.appendChild(copyBtn);
+
+        reviewsContainer.appendChild(card);
+      });
+    }
+
+    function renderChart(ratingsData) {
+      // ratingsData: array of { date: 'YYYY-MM-DD', rating: number }
+      // We will group ratings by date and count distribution of ratings 1-5 stars per date
+
+      // Prepare data
+      const dateMap = {};
+      ratingsData.forEach(({ absolute_date, rating }) => {
+        const date = absolute_date.slice(0, 10);
+        if (!dateMap[date]) dateMap[date] = [];
+        dateMap[date].push(rating);
+      });
+
+      const dates = Object.keys(dateMap).sort();
+      const starCounts = {
+        1: [],
+        2: [],
+        3: [],
+        4: [],
+        5: [],
+      };
+
+      dates.forEach((date) => {
+        const ratings = dateMap[date];
+        for (let star = 1; star <= 5; star++) {
+          const count = ratings.filter(r => Math.round(r) === star).length;
+          starCounts[star].push(count);
+        }
+      });
+
+      const ctx = document.getElementById('ratingsChart').getContext('2d');
+      if (ratingsChartInstance) {
+        ratingsChartInstance.destroy();
+      }
+      ratingsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [
+            {
+              label: '1 Star',
+              data: starCounts[1],
+              borderColor: '#dc2626',
+              backgroundColor: '#dc2626aa',
+              fill: false,
+              tension: 0.3,
+            },
+            {
+              label: '2 Stars',
+              data: starCounts[2],
+              borderColor: '#f97316',
+              backgroundColor: '#f97316aa',
+              fill: false,
+              tension: 0.3,
+            },
+            {
+              label: '3 Stars',
+              data: starCounts[3],
+              borderColor: '#eab308',
+              backgroundColor: '#eab308aa',
+              fill: false,
+              tension: 0.3,
+            },
+            {
+              label: '4 Stars',
+              data: starCounts[4],
+              borderColor: '#22c55e',
+              backgroundColor: '#22c55eaa',
+              fill: false,
+              tension: 0.3,
+            },
+            {
+              label: '5 Stars',
+              data: starCounts[5],
+              borderColor: '#16a34a',
+              backgroundColor: '#16a34aaa',
+              fill: false,
+              tension: 0.3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          interaction: {
+            mode: 'nearest',
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: 'white',
+                font: { weight: '600' },
+              },
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: 'white' },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: 'white', stepSize: 1 },
+              grid: { color: 'rgba(255,255,255,0.1)' },
+            },
+          },
+        },
+      });
+    }
+
+    // Sentiment tagging mock function (since backend does not provide)
+    function generateSentimentSummary(reviews) {
+      // Simple heuristic: rating >=4 positive, 3 neutral, <3 negative
+      let positive = 0, neutral = 0, negative = 0;
+      reviews.forEach(r => {
+        if (r.rating >= 4) positive++;
+        else if (r.rating >= 3) neutral++;
+        else negative++;
+      });
+      return { positive, neutral, negative };
+    }
+
+    scrapeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Validate URL
+      const urlInput = document.getElementById('url');
+      if (!urlInput.value.trim()) {
+        urlInput.focus();
+        showToast('Please enter a valid Google Maps URL.');
+        return;
+      }
+
+      // Validate number of reviews
+      const numReviewsInput = document.getElementById('num_reviews');
+      if (!numReviewsInput.value || numReviewsInput.value < 1) {
+        numReviewsInput.focus();
+        showToast('Please enter a valid number of reviews.');
+        return;
+      }
+
+      // Show loading
+      loadingOverlay.classList.remove('hidden');
+      submitBtn.disabled = true;
+
+      // Prepare payload
+      const payload = {
+        url: urlInput.value.trim(),
+        num_reviews: Number(numReviewsInput.value),
+        start_date: document.getElementById('start_date').value || null,
+        end_date: document.getElementById('end_date').value || null,
+      };
+
+      try {
+        const response = await fetch('/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Show results section
+        resultsSection.classList.remove('hidden');
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+        // Set place name
+        placeNameEl.textContent = data.place_name || 'Unknown Place';
+
+        // Set download link
+        downloadExcelLink.href = data.download_link || '#';
+
+        // Set map link and iframe
+        const mapLink = data.map_link || `https://www.google.com/maps/place/${encodeURIComponent(data.place_name)}`;
+        openMapLink.href = mapLink;
+        mapFrame.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyD-PLACEHOLDER&q=${encodeURIComponent(data.place_name)}`;
+
+        // Render reviews
+        renderReviews(data.top_reviews || []);
+
+        // Render sentiment summary
+        const sentiment = generateSentimentSummary(data.top_reviews || []);
+        renderSentimentSummary(sentiment);
+
+        // Render chart
+        renderChart(data.top_reviews || []);
+
+      } catch (error) {
+        showToast(`Error: ${error.message}`);
+      } finally {
+        loadingOverlay.classList.add('hidden');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+
+</html>

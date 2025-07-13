@@ -1,0 +1,9 @@
+fastapi==0.110.0
+uvicorn==0.29.0
+selenium==4.34.0
+beautifulsoup4==4.13.4
+pandas==2.3.0
+openpyxl==3.1.5
+python-multipart==0.0.9
+dateparser==1.2.0
+aiofiles==23.2.1
