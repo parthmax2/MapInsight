@@ -1,5 +1,4 @@
 
-````
 # 🗺️ MapInsight – Google Maps Review Scraper & Analyzer
 
 **MapInsight** is a powerful web-based tool that lets you scrape, filter, and analyze reviews from any Google Maps location. It uses FastAPI for the backend, Selenium for automated scraping, and a modern glassmorphism UI to make everything look premium and intuitive.
@@ -117,5 +116,4 @@ This project is licensed under the **MIT License**.
 If you like this project, consider giving it a ⭐️ on [GitHub](https://github.com/parthmax2/MapInsight)
 It helps others discover it and motivates continued development!
 
-````
 
